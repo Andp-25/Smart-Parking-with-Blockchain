@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Lot DApp</title>
+    <link rel="stylesheet" href="stylesheets/app.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/ethereum/web3.js/0.20.0/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="./app.js"></script>
+    <style>
+        /* Add your styles here */
+        .parking-lot {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            width: 45%;
+        }
+
+        .block {
+            background-color: #4CAF50;
+            color: white;
+            margin: 10px 0;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .block:hover {
+            background-color: #45a049;
+        }
+
+        .block.selected {
+            background-color: #ff5722;
+        }
+
+        .time-slot {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #f2f2f2;
+            margin: 5px 0;
+            border-radius: 5px;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .time-slot:hover {
+            background-color: #ddd;
+        }
+
+        .time-slot.selected {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Parking Lot Management DApp</h1>
+
+        <h2>Register Vehicle</h2>
+        <form onsubmit="App.registerVehicle(); return false;">
+            <label for="ownerName">Owner Name:</label>
+            <input type="text" id="ownerName" required>
+            <br>
+            <label for="vehicleNumber">Vehicle Number:</label>
+            <input type="text" id="vehicleNumber" required>
+            <br>
+            <button type="submit">Register Vehicle</button>
+        </form>
+        <div id="registerVehicleResult"></div>
+
+        <h2>Registered Vehicles</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Owner Address</th>
+                    <th>Owner Name</th>
+                    <th>Vehicle Number</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="vehicleList">
+                <!-- Registered vehicles will be displayed here -->
+            </tbody>
+        </table>
+
+        <h2>Parking Slots</h2>
+        <div class="parking-lot">
+            <div class="column">
+                <div class="block" id="slot-1" onclick="App.selectSlot(1)">Slot 1</div>
+                <div class="block" id="slot-2" onclick="App.selectSlot(2)">Slot 2</div>
+                <div class="block" id="slot-3" onclick="App.selectSlot(3)">Slot 3</div>
+            </div>
+            <div class="column">
+                <div class="block" id="slot-4" onclick="App.selectSlot(4)">Slot 4</div>
+                <div class="block" id="slot-5" onclick="App.selectSlot(5)">Slot 5</div>
+                <div class="block" id="slot-6" onclick="App.selectSlot(6)">Slot 6</div>
+            </div>
+        </div>
+        <div id="selectedSlot" style="font-size: 20px; margin-top: 20px;"></div>
+
+        <!-- The Modal -->
+        <div id="dateModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeModal">&times;</span>
+                <h2>Select a Date</h2>
+                <input type="text" id="datepicker" placeholder="Select Date" />
+                <div id="timeSlotsContainer" style="margin-top: 20px;"></div>
+                <button id="confirmBookingButton" style="margin-top: 20px;" onclick="App.bookSlot()">Confirm Booking</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Initialize selected slot and time variables
+        let selectedSlotNumber = null;
+        let selectedTimeSlot = "";
+
+        // Function to handle slot selection
+        App.selectSlot = function (slotNumber) {
+            selectedSlotNumber = slotNumber; // Store selected slot number
+            const selectedSlotDiv = document.getElementById("selectedSlot");
+            selectedSlotDiv.innerHTML = "You selected: Slot " + slotNumber;
+
+            // Highlight selected slot
+            const blocks = document.querySelectorAll('.block');
+            blocks.forEach(block => block.classList.remove('selected'));
+            blocks[slotNumber - 1].classList.add('selected');
+
+            // Show the modal
+            document.getElementById("dateModal").style.display = "block";
+
+            // Initialize Flatpickr
+            flatpickr("#datepicker", {
+                minDate: "today",
+                onChange: function(selectedDates) {
+                    const selectedDate = selectedDates[0].toLocaleDateString('en-GB');
+                    selectedSlotDiv.innerHTML = "You selected: Slot " + slotNumber + " for " + selectedDate;
+                    displayTimeSlots(selectedDate);
+                }
+            });
+        };
+
+        function displayTimeSlots(date) {
+            const timeSlotsContainer = document.getElementById("timeSlotsContainer");
+            timeSlotsContainer.innerHTML = "";
+
+            const startHour = 9;
+            const endHour = 21;
+
+            for (let hour = startHour; hour < endHour; hour++) {
+                const timeSlotDiv = document.createElement("div");
+                timeSlotDiv.className = "time-slot";
+                timeSlotDiv.innerHTML = `${hour} - ${hour + 1}`;
+                timeSlotDiv.onclick = function () {
+                    selectTimeSlot(timeSlotDiv);
+                };
+                timeSlotsContainer.appendChild(timeSlotDiv);
+            }
+        }
+
+        function selectTimeSlot(timeSlotDiv) {
+            const timeSlots = document.querySelectorAll('.time-slot');
+            timeSlots.forEach(slot => slot.classList.remove('selected'));
+            timeSlotDiv.classList.add('selected');
+            selectedTimeSlot = timeSlotDiv.innerHTML.replace(" - ", "");
+            document.getElementById("selectedSlot").innerHTML += `<br>Time Slot: ${selectedTimeSlot}`;
+        }
+
+        App.bookSlot = async function () {
+            if (selectedSlotNumber === null || !selectedTimeSlot) {
+                alert("Please select a slot and time before booking.");
+                return;
+            }
+
+            const dateInput = document.getElementById("datepicker").value;
+            const dateParts = dateInput.split("/");
+            const formattedDate = `${dateParts[0]}${dateParts[1]}${dateParts[2]}`;
+            const fullDate = formattedDate + selectedTimeSlot;
+
+            console.log("Booking slot:", selectedSlotNumber, "on date:", fullDate);
+
+            try {
+                const cost = '0.01';
+                await parkingLotInstance.bookSlot(selectedSlotNumber, fullDate, { 
+                    from: account, 
+                    value: web3.utils.toWei(cost, "ether")
+                });
+                alert("Slot booked successfully!");
+                this.displayBookings();
+            } catch (error) {
+                console.error("Error booking slot:", error);
+                alert("Error booking slots: " + error.message);
+            }
+        };
+
+        var modal = document.getElementById("dateModal");
+        var span = document.getElementById("closeModal");
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+
+</html>

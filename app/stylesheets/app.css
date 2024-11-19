@@ -1,0 +1,90 @@
+.parking-lot {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    width: 45%;
+}
+
+.block {
+    background-color: #4CAF50;
+    color: white;
+    margin: 10px 0;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.block:hover {
+    background-color: #45a049;
+}
+
+.block.selected {
+    background-color: #ff5722;
+}
+
+.time-slot {
+    padding: 10px;
+    cursor: pointer;
+    background-color: #f2f2f2;
+    margin: 5px 0;
+    border-radius: 5px;
+    text-align: center;
+    transition: background-color 0.3s;
+}
+
+.time-slot:hover {
+    background-color: #ddd;
+}
+
+.time-slot.selected {
+    background-color: #2196F3;
+    color: white;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.block.booked {
+    background-color: #ff6666; /* Red color for booked slots */
+    pointer-events: none;      /* Prevent interaction with booked slots */
+}
+
