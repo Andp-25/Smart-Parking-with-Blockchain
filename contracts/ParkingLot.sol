@@ -14,7 +14,7 @@ contract ParkingLot {
     struct Booking {
         uint slotNumber;
         string date;
-        string timeSlot;
+        uint timeSlot;
         address owner;
     }
 
@@ -27,7 +27,7 @@ contract ParkingLot {
 
     // Events for logging actions
     event VehicleRegistered(address indexed owner, string ownerName, string vehicleNumber);
-    event SlotBooked(address indexed owner, uint slotNumber, string date, string timeSlot);
+    event SlotBooked(address indexed owner, uint slotNumber, string date, uint timeSlot);
 
     // Constructor
     constructor(uint _totalSlots) public {
@@ -90,11 +90,11 @@ contract ParkingLot {
         bookings[bookingKey] = Booking({
             slotNumber: _slotNumber,
             date: _date,
-            timeSlot: uint2str(_timeSlot),
+            timeSlot: _timeSlot,
             owner: msg.sender
         });
 
-        emit SlotBooked(msg.sender, _slotNumber, _date, uint2str(_timeSlot)); // Log booking
+        emit SlotBooked(msg.sender, _slotNumber, _date, _timeSlot); // Log booking
     }
 
     // Utility function to convert uint to string
@@ -116,7 +116,7 @@ contract ParkingLot {
     }
 
     // Get all bookings
-    function getAllBookings() public view returns (uint[] memory, string[] memory, string[] memory) {
+    function getAllBookings() public view returns (uint[] memory, string[] memory, uint[] memory) {
         uint totalBookings = 0;
 
         // Calculate the total number of bookings first
@@ -134,20 +134,20 @@ contract ParkingLot {
         // Initialize arrays with the total number of bookings found
         uint[] memory slotNumbers = new uint[](totalBookings);
         string[] memory dates = new string[](totalBookings);
-        string[] memory timeSlots = new string[](totalBookings);
+        uint[] memory timeSlots = new uint[](totalBookings);
         
         uint bookingCount = 0;
 
         // Now fill in the actual booking details
         for (uint a = 0; a < totalSlots; a++) {
             for (uint b = 910; b <= 2311; b += 101) {
-                bytes32 bookingKey = keccak256(abi.encodePacked(a, "", b)); // Original bookingKey variable used here
+                bytes32 bookingKey = keccak256(abi.encodePacked(a, b)); // Original bookingKey variable used here
 
                 // Check if the booking exists
                 if (bookings[bookingKey].owner != address(0)) {
                     slotNumbers[bookingCount] = a;
                     dates[bookingCount] = bookings[bookingKey].date; // Actual date from booking
-                    timeSlots[bookingCount] = uint2str(b);
+                    timeSlots[bookingCount] = b;
                     bookingCount++;
                 }
             }
